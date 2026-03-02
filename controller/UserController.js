@@ -106,13 +106,15 @@ export const getUserProfile = async (req, res) => {
 export const getPublicProfile = async (req, res) => {
     try {
         const { userId } = req.params;
-const user = await User.findById(userId)
+      const user = await User.findById(userId)
             .select("firstName lastName profileImage links email")
             .lean();
         if (!user) {
             return res.status(404).json({ message: "Profile not found" });
         }
- res.status(200).json({message: "Public profile loaded",profile: { firstName: user.firstName, lastName: user.lastName, profileImage: user.profileImage,
+     res.status(200).json({message: "Public profile loaded",profile: { firstName: user.firstName, 
+        lastName: user.lastName, 
+        profileImage: user.profileImage,
                 email: user.email,
                 links: user.links 
             }
