@@ -1,23 +1,26 @@
 import User from "../models/authModel.js";
 
 export const updateLinks = async (req, res) => {
-    try {
-        const { links } = req.body; 
-        const userId = req.user.id; 
+  try {
+    const { links } = req.body;
+    const userId = req.user.id;
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { $set: { links: links } },
-            { new: true, runValidators: true } 
-        );
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { links: { $each: links } } 
+      },
+      { new: true, runValidators: true }
+    );
 
-        res.status(200).json({
-            message: "Links updated successfully",
-            links: updatedUser.links
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(200).json({
+      message: "Links added successfully",
+      links: updatedUser.links,
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const deleteLink = async (req, res) => {
