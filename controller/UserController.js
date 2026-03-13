@@ -1,14 +1,103 @@
 import User from "../models/authModel.js";
 
+// export const updateLinks = async (req, res) => {
+//   try {
+//     const { links } = req.body;
+//     const userId = req.user.id;
+
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       {
+//         $push: { links: { $each: links } } 
+//       },
+//       { new: true, runValidators: true }
+//     );
+
+//     res.status(200).json({
+//       message: "Links added successfully",
+//       links: updatedUser.links,
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
+
+
+
+
+
 export const updateLinks = async (req, res) => {
   try {
     const { links } = req.body;
     const userId = req.user.id;
 
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+   
+    const normalizeUrl = (url) => {
+      return url.trim().toLowerCase().replace(/\/$/, ''); 
+    };
+
+   
+    const seenUrls = new Set();
+    const duplicatesInNewLinks = [];
+    
+    links.forEach((link, index) => {
+      const normalizedUrl = normalizeUrl(link.url);
+      if (seenUrls.has(normalizedUrl)) {
+        duplicatesInNewLinks.push({
+          index,
+          platform: link.platform,
+          url: link.url
+        });
+      } else {
+        seenUrls.add(normalizedUrl);
+      }
+    });
+
+    if (duplicatesInNewLinks.length > 0) {
+      return res.status(400).json({
+        message: "Duplicate URLs found in your submission",
+        duplicates: duplicatesInNewLinks
+      });
+    }
+
+    const existingLinks = currentUser.links || [];
+    const duplicatesWithExisting = [];
+
+    for (const newLink of links) {
+      const normalizedNewUrl = normalizeUrl(newLink.url);
+      
+      const isDuplicate = existingLinks.some(existingLink => 
+        normalizeUrl(existingLink.url) === normalizedNewUrl
+      );
+
+      if (isDuplicate) {
+        duplicatesWithExisting.push({
+          platform: newLink.platform,
+          url: newLink.url
+        });
+      }
+    }
+
+    if (duplicatesWithExisting.length > 0) {
+      return res.status(400).json({
+        message: "Some links already exist in your profile",
+        duplicates: duplicatesWithExisting
+      });
+    }
+
+    
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        $push: { links: { $each: links } } 
+        $push: { links: { $each: links } }
       },
       { new: true, runValidators: true }
     );
@@ -19,9 +108,11 @@ export const updateLinks = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Update links error:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 export const deleteLink = async (req, res) => {
     try {
