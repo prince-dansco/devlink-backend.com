@@ -13,7 +13,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://devlink-com-6z1g.vercel.app"
+  // "https://devlink-com-6z1g.vercel.app"
+  "https://dev-link-com.vercel.app"
 ];
 
 const corsOptions = {
